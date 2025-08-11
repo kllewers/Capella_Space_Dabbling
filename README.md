@@ -59,3 +59,8 @@
 #### Step 3: Split apart tiles to make a splits.json so we have data for training and then data for validation
 
     python make_split.py
+
+#### Step 4: Train the convolutional neural network
+
+    python train_cnn.py
+    
