@@ -13,7 +13,7 @@ MSK_DIR      = "data/tiles/masks"
 SPLIT_JSON   = "splits.json"
 OUT_WEIGHTS  = "models/unet_mnetv3_sar.pt"
 
-BATCH_SIZE       = 8          # if slow on CPU, try less
+BATCH_SIZE       = 4          # if slow on CPU, try less
 LR               = 1e-3
 EPOCHS           = 3         # set a high ceiling; early stopping will cut it short
 NUM_WORKERS      = 0          # safest on macOS; bump to 2 later if needed
@@ -41,8 +41,8 @@ class NPYSARDataset(Dataset):
             A.HorizontalFlip(p=0.5),
             A.VerticalFlip(p=0.2),
             A.RandomRotate90(p=0.2),
-            A.ShiftScaleRotate(shift_limit=0.05, scale_limit=0.05, rotate_limit=10, p=0.3),
-            A.RandomGamma(gamma_limit=(80,120), p=0.2),
+            # A.ShiftScaleRotate(shift_limit=0.05, scale_limit=0.05, rotate_limit=10, p=0.3),
+            # A.RandomGamma(gamma_limit=(80,120), p=0.2),
         ]) if augment else None
 
     def __len__(self):

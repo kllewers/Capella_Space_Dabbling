@@ -59,10 +59,7 @@
 
 #### Step 2: Run make_tiles.py on CLI
 
-    This dataset is massive and since I am running it on my local machine 
-I have written in functions to load 512x512 in a stream process and also 
-declared an ROI/AOI where I know there are building and non-building 
-pixels
+This dataset is massive and since I am running it on my local machine I will not be cross referencing/masking it with an OSM mask like I normally would. If was submitting the job to an HPC via slurm or leveraging an EC2 instance, I would do this.
 
     python <basepath>/make_tiles.py
 
@@ -71,6 +68,8 @@ pixels
     python <basepath>/make_split.py
 
 #### Step 4: Train the convolutional neural network
+
+Once again, this is being done locally on a Mac so there is some corner cutting (ie programmatically putting in the early drop off if there is not much difference between epochs, limiting how much is used for testing and validation, defining an ROI, taking out some augmenting, shamefully low number of epochs, etc). Either way, it's going to take 5-ever to run locally. It's probably still running as you see this #RIP
 
     python <basepath>/train_cnn.py
 
@@ -94,8 +93,8 @@ pixels
 |  - Read SAR intensity   |
 |  - Convert to dB        |
 |  - Normalize [0,1]      |
-|  - Download OSM bldgs   |
-|  - Rasterize masks      |
+|  - Download OSM bldgs   | <--- not doing in this specific analysis but would usually
+|  - Rasterize masks      | <--- not doing in this specific analysis but would usually
 +-----------+-------------+
             |
             v
