@@ -13,7 +13,7 @@ OUT_WEIGHTS = "models/unet_mnetv3_sar.pt"
 BATCH_SIZE = 8
 LR = 1e-3
 EPOCHS = 12
-NUM_WORKERS = 4
+NUM_WORKERS = 0
 
 # ----- Dataset -----
 class NPYSARDataset(Dataset):
@@ -31,16 +31,22 @@ class NPYSARDataset(Dataset):
     def __len__(self): return len(self.ids)
 
     def __getitem__(self, i):
-        stem = self.ids[i]
-        x = np.load(os.path.join(IMG_DIR, stem + ".npy"))      # (H,W,C)
-        y = np.load(os.path.join(MSK_DIR, stem + ".npy"))      # (H,W)
+        stem = self.ids[i]  # e.g., "img_000204"
+        x = np.load(os.path.join(IMG_DIR, stem + ".npy"))  # (H,W,C)
+
+        # --- fix: map image stem to corresponding mask stem ---
+        mask_stem = stem.replace("img_", "msk_", 1) if stem.startswith("img_") else stem
+        y = np.load(os.path.join(MSK_DIR, mask_stem + ".npy"))  # (H,W)
+        # ------------------------------------------------------
+
         if self.tf:
             aug = self.tf(image=x, mask=y)
             x, y = aug["image"], aug["mask"]
-        # to CHW tensors
+
         x = torch.from_numpy(x.transpose(2,0,1)).float()
-        y = torch.from_numpy((y > 0).astype(np.float32))[None, ...]  # (1,H,W)
+        y = torch.from_numpy((y > 0).astype(np.float32))[None, ...]
         return x, y
+
 
 def load_ids():
     with open(SPLIT_JSON) as f: sp = json.load(f)

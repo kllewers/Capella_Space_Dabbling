@@ -1,4 +1,4 @@
-### This Repository is a Fun Space to Work with the Open Data from Capella Space's S3 Bucket
+### This Repository is a Fun Space (pun intended) to Work with the Open Data from Capella Space's S3 Bucket
 
 #### Step 1: Get Data
 
@@ -16,9 +16,12 @@
         PRE 2025/
         PRE tiledb/```
 
-    Next let's look at some data from 2024
+    Next let's look at some data from 2025
 
-    aws s3 ls --no-sign-request --recursive s3://capella-open-data/data/2024/ | grep GEO | grep -i '\.tif$' | head -20 
+
+    aws s3 ls --no-sign-request --recursive s3://capella-open-data/data/2025/ \
+    | grep CAPELLA_C11_SP_GEO_HH_20250320045730_20250320045802
+ 
 
     You should get this:
 
@@ -43,24 +46,84 @@
     2024-10-26 01:31:56 1287013942 data/2024/10/1/CAPELLA_C13_SP_GEO_HH_20241001184147_20241001184220/CAPELLA_C13_SP_GEO_HH_20241001184147_20241001184220.tif
     2024-10-25 16:53:57  597481804 data/2024/10/1/CAPELLA_C13_SP_GEO_HH_20241001184147_20241001184220/CAPELLA_C13_SP_GEO_HH_20241001184147_20241001184220_preview.tif
 
-    I am going to select one:
+    I know I want to look at the Shanghai dataset so I will download this via the AWS-CLI:
+    
+    mkdir -p data/raw/scene_shanghai
+    aws s3 cp --no-sign-request \
+    s3://capella-open-data/data/2025/3/20/CAPELLA_C11_SP_GEO_HH_20250320045730_20250320045802/ \
+    data/raw/scene_shanghai/ --recursive
 
-        aws s3 cp --no-sign-request \
-    s3://capella-open-data/data/2024/1/26/CAPELLA_C06_SS_GEO_HH_20240126194132_20240126194144/ \
-    data/raw/scene1/ --recursive
 
 
 
 
 #### Step 2: Run make_tiles.py on CLI
 
-    python make_tiles.py
+    This dataset is massive and since I am running it on my local machine 
+I have written in functions to load 512x512 in a stream process and also 
+declared an ROI/AOI where I know there are building and non-building 
+pixels
+
+    python <basepath>/make_tiles.py
 
 #### Step 3: Split apart tiles to make a splits.json so we have data for training and then data for validation
 
-    python make_split.py
+    python <basepath>/make_split.py
 
 #### Step 4: Train the convolutional neural network
 
-    python train_cnn.py
-    
+    python <basepath>/train_cnn.py
+
+#### Step 5: Visualize the predictions made by the Neural Net
+
+    python <basepath>/visualize_predictions.py
+
+#### Results:
+
+
+#### For the Visual Learners (like me) here is a simplied ASCII-style diagram of the flow:
+
++-------------------------+
+|  Capella Open Data (S3) |
+|   GEO GeoTIFF + JSON    |
++-----------+-------------+
+            |
+            v
++-------------------------+
+|   make_tiles.py         |
+|  - Read SAR intensity   |
+|  - Convert to dB        |
+|  - Normalize [0,1]      |
+|  - Download OSM bldgs   |
+|  - Rasterize masks      |
++-----------+-------------+
+            |
+            v
++-------------------------+
+|  data/tiles/            |
+|   images/  -> .npy (SAR)|
+|   masks/   -> .npy (GT) |
++-----------+-------------+
+            |
+            v
++-------------------------+
+|  make_split.py          |
+|  -> splits.json         |
+|     train / val IDs     |
++-----------+-------------+
+            |
+            v
++-------------------------+
+|  train_cnn.py           |
+|  - U-Net + MobileNetV3  |
+|  - Semantic Segmentation|
+|  - Save best weights    |
++-----------+-------------+
+            |
+            v
++-------------------------+
+|  visualize_predictions  |
+|  - Load model           |
+|  - SAR tile -> mask     |
+|  - Display side-by-side |
++-------------------------+

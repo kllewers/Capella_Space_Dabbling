@@ -8,7 +8,7 @@ import osmnx as ox
 from tqdm import tqdm
 
 # Config
-SCENE_TIF = "data/raw/scene1"  # folder with the GEO .tif
+SCENE_TIF = "data/raw/scene_shanghai"  # folder with the GEO .tif
 OUT_IMG_DIR = "data/tiles/images"
 OUT_MSK_DIR = "data/tiles/masks"
 TILE_SIZE = 512
