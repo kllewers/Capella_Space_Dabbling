@@ -13,9 +13,9 @@ MSK_DIR      = "data/tiles/masks"
 SPLIT_JSON   = "splits.json"
 OUT_WEIGHTS  = "models/unet_mnetv3_sar.pt"
 
-BATCH_SIZE       = 4          # if slow on CPU, try less
+BATCH_SIZE       = 8          # if slow on CPU, try less
 LR               = 1e-3
-EPOCHS           = 50         # set a high ceiling; early stopping will cut it short
+EPOCHS           = 3         # set a high ceiling; early stopping will cut it short
 NUM_WORKERS      = 0          # safest on macOS; bump to 2 later if needed
 PREFETCH_FACTOR  = 2          # ignored when NUM_WORKERS=0
 PRINT_EVERY      = 10         # batches
@@ -79,8 +79,8 @@ def load_ids():
     val   = sp["val"]
 
     # ---- quick subset for faster training ----
-    train = train[:1000]   # adjust as you like (e.g., 1000–3000)
-    val   = val[:200]      # keep some validation tiles
+    train = train[:1000]   
+    val   = val[:200]      
     # ------------------------------------------
 
     return train, val
