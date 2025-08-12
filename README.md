@@ -46,13 +46,14 @@
     2024-10-26 01:31:56 1287013942 data/2024/10/1/CAPELLA_C13_SP_GEO_HH_20241001184147_20241001184220/CAPELLA_C13_SP_GEO_HH_20241001184147_20241001184220.tif
     2024-10-25 16:53:57  597481804 data/2024/10/1/CAPELLA_C13_SP_GEO_HH_20241001184147_20241001184220/CAPELLA_C13_SP_GEO_HH_20241001184147_20241001184220_preview.tif
 
-    I know I want to look at the Shanghai dataset so I will download this via the AWS-CLI:
+I know I want to look at the Shanghai dataset so I will download this via the AWS-CLI:
     
     mkdir -p data/raw/scene_shanghai
     aws s3 cp --no-sign-request \
     s3://capella-open-data/data/2025/3/20/CAPELLA_C11_SP_GEO_HH_20250320045730_20250320045802/ \
     data/raw/scene_shanghai/ --recursive
 
+![Shanghai Data](https://github.com/kllewers/Capella_Space_Dabbling/raw/main/Shanghai_data.png)
 
 
 
