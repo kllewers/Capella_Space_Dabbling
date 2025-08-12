@@ -51,7 +51,7 @@ def bbox4326_from_capella_json(json_path):
     crs_prod = CRS.from_wkt(wkt)
     tr = Transformer.from_crs(crs_prod, "EPSG:4326", always_xy=True)
     min_lon, min_lat = tr.transform(xmin, ymin)
-    max_lon, max_lat = tr.transform(xmax, ymax)
+    max_lon, max_lat = tr.transform(maxx, maxy)
     eps = 1e-5
     return (min_lon - eps, min_lat - eps, max_lon + eps, max_lat + eps)
 
@@ -63,18 +63,15 @@ def osmnx_sane_defaults():
     ox.settings.memory = True
 
 def fetch_osm_buildings_polygon(poly4326):
-    """
-    poly4326: shapely Polygon in EPSG:4326 (lon,lat)
-    returns GeoDataFrame of building polygons (EPSG:4326) or []
-    """
+    """poly4326: shapely Polygon in EPSG:4326 (lon,lat). Returns GeoDataFrame or []."""
     tags = {"building": True}
     try:
         gdf = ox.geometries_from_polygon(poly4326, tags=tags)
     except AttributeError:
         from osmnx.features import features_from_polygon
         gdf = features_from_polygon(poly4326, tags)
-
-    if gdf is None or gdf.empty: return []
+    if gdf is None or gdf.empty: 
+        return []
     gdf = gdf[~gdf.geometry.is_empty]
     gdf = gdf[gdf.geometry.type.isin(["Polygon", "MultiPolygon"])]
     return gdf
@@ -109,7 +106,8 @@ def parse_args():
     ap.add_argument("--tile-size",  type=int, default=512)
     ap.add_argument("--stride",     type=int, default=412,
                     help="Step in pixels; 512=no overlap, 412≈100px overlap")
-    ap.add_argument("--db-clip",    type=float, nargs=2, default=[-30.0, 0.0])
+    ap.add_argument("--db-clip",    type=float, nargs=2, default=[-30.0, 0.0],
+                    help="dB min max for normalization (e.g., -25 5)")
     ap.add_argument("--aoi",        type=float, nargs=4, default=None,
                     help="AOI bbox as minLon minLat maxLon maxLat (EPSG:4326)")
     ap.add_argument("--aoi-poly",   type=float, nargs='+', default=None,
@@ -117,7 +115,7 @@ def parse_args():
     ap.add_argument("--capella-json", type=str, default=None,
                     help="Capella GEO metadata JSON; used for ROI if --aoi/--aoi-poly not given")
     ap.add_argument("--min-positive", type=int, default=0,
-                    help="If >0, only save tiles whose rasterized mask has at least this many positive pixels")
+                    help="If >0, only save tiles with at least this many mask pixels = 1")
     return ap.parse_args()
 
 # ---------- main ----------
@@ -134,7 +132,6 @@ def main():
         # --- ROI selection priority: polygon > bbox > json > full image ---
         poly4326 = None
         if args.aoi_poly and len(args.aoi_poly) >= 6 and len(args.aoi_poly) % 2 == 0:
-            # args are CRS:84 (lat,lon). Convert to lon,lat tuples.
             coords = args.aoi_poly
             latlon = list(zip(coords[0::2], coords[1::2]))  # [(lat,lon), ...]
             lonlat = [(lo, la) for la, lo in latlon]
@@ -176,7 +173,7 @@ def main():
 
         # Fetch OSM buildings for polygon AOI, then reproject
         bldg_gdf_4326 = fetch_osm_buildings_polygon(poly4326)
-        geoms = reproject_geoms_gdf_to_crs(bldg_gdf_4326, crs) if len(bldg_gdf_4326) else []
+        geoms = reproject_geoms_gdf_to_crs(bldg_gdf_4326, crs) if isinstance(bldg_gdf_4326, object) and len(bldg_gdf_4326) else []
         sindex = STRtree(geoms) if geoms else None
 
         # Tiling
@@ -198,35 +195,18 @@ def main():
                 x_lr, y_lr = (tile_transform * (args.tile_size, args.tile_size))
                 tile_poly = box(min(x_ul, x_lr), min(y_ul, y_lr), max(x_ul, x_lr), max(y_ul, y_lr))
 
-            # Intersect buildings with tile_poly
-            cand = []
-            if sindex is not None:
-                res = sindex.query(tile_poly)          # Shapely 1.x -> indices (ndarray of ints)
-                                                    # Shapely 2.x -> geometries (iterable)
-                # Normalize to a list of geometries
-                if hasattr(res, "dtype") and np.issubdtype(getattr(res, "dtype", None), np.integer):
-                    # ndarray of ints -> map back to geoms
-                    cand = [geoms[i] for i in res.tolist()]
-                elif isinstance(res, (list, tuple)) and len(res) > 0 and isinstance(res[0], (int, np.integer)):
-                    cand = [geoms[i] for i in res]
-                else:
-                    # Already geometries
-                    cand = list(res)
-
-                # Keep only those that truly intersect this tile
-                cand = [g for g in cand if g.intersects(tile_poly)]
-
-            # Rasterize mask
-            if len(cand) > 0:
-                msk = rasterize(
-                    ((mapping(g), 1) for g in cand),
-                    out_shape=(args.tile_size, args.tile_size),
-                    transform=tile_transform,
-                    fill=0, all_touched=False, dtype=np.uint8
-                )
-            else:
-                msk = np.zeros((args.tile_size, args.tile_size), np.uint8)
-
+                # Intersect buildings with tile_poly
+                cand = []
+                if sindex is not None:
+                    res = sindex.query(tile_poly)
+                    # Normalize STRtree.query output across Shapely versions
+                    if hasattr(res, "dtype") and np.issubdtype(getattr(res, "dtype", None), np.integer):
+                        cand = [geoms[i] for i in res.tolist()]
+                    elif isinstance(res, (list, tuple)) and len(res) > 0 and isinstance(res[0], (int, np.integer)):
+                        cand = [geoms[i] for i in res]
+                    else:
+                        cand = list(res)
+                    cand = [g for g in cand if g.intersects(tile_poly)]
 
                 # Rasterize mask
                 if len(cand) > 0:
@@ -239,20 +219,9 @@ def main():
                 else:
                     msk = np.zeros((args.tile_size, args.tile_size), np.uint8)
 
-
-                # Rasterize mask
-                if cand:
-                    msk = rasterize(
-                        ((mapping(g), 1) for g in cand),
-                        out_shape=(args.tile_size, args.tile_size),
-                        transform=tile_transform,
-                        fill=0, all_touched=False, dtype=np.uint8
-                    )
-                else:
-                    msk = np.zeros((args.tile_size, args.tile_size), np.uint8)
-
-                if args.min_positive > 0 and msk.sum() < args.min_positive:
-                    pbar.update(1); continue  # skip boring tiles
+                # If filtering is requested, skip tiles with too few positives
+                if args.min_positive > 0 and int(msk.sum()) < args.min_positive:
+                    pbar.update(1); continue
 
                 # Normalize SAR tile
                 db  = to_db(tile.astype(np.float64))
