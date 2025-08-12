@@ -55,7 +55,7 @@ I know I want to look at the Shanghai dataset so I will download this via the AW
     s3://capella-open-data/data/2025/3/20/CAPELLA_C11_SP_GEO_HH_20250320045730_20250320045802/ \
     data/raw/scene_shanghai/ --recursive
 
-![Shanghai Data](https://github.com/kllewers/Capella_Space_Dabbling/raw/main/Shanghai_data.png)
+![Shanghai Data](https://github.com/kllewers/Capella_Space_Dabbling/blob/main/Shanghai_data.png) 
 
 
 
