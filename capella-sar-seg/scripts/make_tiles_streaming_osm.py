@@ -198,9 +198,47 @@ def main():
                 x_lr, y_lr = (tile_transform * (args.tile_size, args.tile_size))
                 tile_poly = box(min(x_ul, x_lr), min(y_ul, y_lr), max(x_ul, x_lr), max(y_ul, y_lr))
 
-                # Intersect buildings with tile_poly
-                cand = sindex.query(tile_poly) if sindex else []
-                cand = [g for g in cand if g.intersects(tile_poly)] if cand else []
+            # Intersect buildings with tile_poly
+            cand = []
+            if sindex is not None:
+                res = sindex.query(tile_poly)          # Shapely 1.x -> indices (ndarray of ints)
+                                                    # Shapely 2.x -> geometries (iterable)
+                # Normalize to a list of geometries
+                if hasattr(res, "dtype") and np.issubdtype(getattr(res, "dtype", None), np.integer):
+                    # ndarray of ints -> map back to geoms
+                    cand = [geoms[i] for i in res.tolist()]
+                elif isinstance(res, (list, tuple)) and len(res) > 0 and isinstance(res[0], (int, np.integer)):
+                    cand = [geoms[i] for i in res]
+                else:
+                    # Already geometries
+                    cand = list(res)
+
+                # Keep only those that truly intersect this tile
+                cand = [g for g in cand if g.intersects(tile_poly)]
+
+            # Rasterize mask
+            if len(cand) > 0:
+                msk = rasterize(
+                    ((mapping(g), 1) for g in cand),
+                    out_shape=(args.tile_size, args.tile_size),
+                    transform=tile_transform,
+                    fill=0, all_touched=False, dtype=np.uint8
+                )
+            else:
+                msk = np.zeros((args.tile_size, args.tile_size), np.uint8)
+
+
+                # Rasterize mask
+                if len(cand) > 0:
+                    msk = rasterize(
+                        ((mapping(g), 1) for g in cand),
+                        out_shape=(args.tile_size, args.tile_size),
+                        transform=tile_transform,
+                        fill=0, all_touched=False, dtype=np.uint8
+                    )
+                else:
+                    msk = np.zeros((args.tile_size, args.tile_size), np.uint8)
+
 
                 # Rasterize mask
                 if cand:
