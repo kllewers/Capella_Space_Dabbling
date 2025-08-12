@@ -1,4 +1,6 @@
-### This Repository is a Fun Space (pun intended) to Work with the Open Data from Capella Space's S3 Bucket
+## This Repository is a Fun Space (pun intended) to Work with the Open Data from Capella Space's S3 Bucket
+
+# Related to ```capella-sar-seg``` folder
 
 #### Step 1: Get Data
 
@@ -130,3 +132,6 @@ Once again, this is being done locally on a Mac so there is some corner cutting 
 |  - Display side-by-side |
 +-------------------------+
 ```
+
+
+# Related to ```capella-gee-sentinel-SAR``` folder
