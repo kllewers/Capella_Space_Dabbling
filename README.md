@@ -69,7 +69,7 @@ This dataset is massive and since I am running it on my local machine I will not
 
 #### Step 4: Train the convolutional neural network
 
-Once again, this is being done locally on a Mac so there is some corner cutting (ie programmatically putting in the early drop off if there is not much difference between epochs, limiting how much is used for testing and validation, defining an ROI, taking out some augmenting, shamefully low number of epochs, etc). Either way, it's going to take 5-ever to run locally. It's probably still running as you see this #RIP
+Once again, this is being done locally on a Mac so there is some corner cutting (ie programmatically putting in the early drop off if there is not much difference between epochs, limiting how much is used for testing and validation, defining an ROI, taking out some augmenting, shamefully low number of epochs, etc). Either way, it's going to take 5-ever to run locally (~2hrs with this extremely paired down version found in capella-sar-seg/scripts/local_proofofconcept_train_cnn.py). Some say it's still running to this day #RIP
 
     python <basepath>/train_cnn.py
 
@@ -82,6 +82,7 @@ Once again, this is being done locally on a Mac so there is some corner cutting 
 
 #### For the Visual Learners (like me) here is a simplied ASCII-style diagram of the flow:
 
+```
 +-------------------------+
 |  Capella Open Data (S3) |
 |   GEO GeoTIFF + JSON    |
@@ -126,3 +127,4 @@ Once again, this is being done locally on a Mac so there is some corner cutting 
 |  - SAR tile -> mask     |
 |  - Display side-by-side |
 +-------------------------+
+```
