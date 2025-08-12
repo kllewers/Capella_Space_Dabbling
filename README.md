@@ -127,7 +127,13 @@ The advantages are:
 
 Below is a side-by-side comparison between the **preview TIFF** and the **full GEO TIFF (converted to dB)** from the same scene:
 
-*(Insert your comparison images here — preview on the left, dB on the right)*
+This is the preview which looks extremely noisy and almost binary:
+
+! [Preview] (https://github.com/kllewers/Capella_Space_Dabbling/blob/main/Shanghai_data_preview.png)
+ 
+This is the geotiff which looks much more crisp and you can even detect a few potential anomalies in the water:
+
+![Geotiff] (https://github.com/kllewers/Capella_Space_Dabbling/blob/main/Shanghai_data_geotiff.png)
 
 ---
 
