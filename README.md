@@ -73,11 +73,12 @@ Once again, this is being done locally on a Mac so there is some corner cutting 
 
     python <basepath>/train_cnn.py
 
-#### Step 5: Visualize the predictions made by the Neural Net
+#### Step 5: Visualize the predictions made by the Neural Net. 
 
     python <basepath>/visualize_predictions.py
 
-#### Results:
+
+#### Results: I cannot stress enough that the model with it's current amount of epochs and samples used is terrible. This is due to local computing and time constraints, BUT this is a good place to start for learning how to set up this project. Additionally, you can use a more robust workflow locally if you have time and don't need to use your computer for other computationally intensive tasks or if you want to try parallelization, I like to use dask (https://www.dask.org/).
 
 
 #### For the Visual Learners (like me) here is a simplied ASCII-style diagram of the flow:
