@@ -135,3 +135,6 @@ Once again, this is being done locally on a Mac so there is some corner cutting 
 
 
 # Related to ```capella-gee-sentinel-SAR``` folder
+
+
+# Related to ```capella-gbif``` folder
